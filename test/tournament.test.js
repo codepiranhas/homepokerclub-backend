@@ -81,7 +81,7 @@ describe('##### /TOURNAMENT TESTS #####', function() {
 
     it('should return a status 200', function(done) { 
       request(app)
-        .delete(`/tournaments/delete/${tournamentObj._id}`)
+        .delete(`/tournaments/${tournamentObj._id}/delete`)
         .set('Accept', 'application/json')
         .set('Authorization', 'Bearer ' + testCurrentUser.token)
         .end(function(err, res) {

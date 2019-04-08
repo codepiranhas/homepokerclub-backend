@@ -4,7 +4,7 @@ const tournamentController = require('../controllers/tournament.controller');
 
 // routes
 router.post('/create', create);
-router.delete('/delete/:id', deleteTournament);
+router.delete('/:id/delete', deleteTournament);
 
 module.exports = router;
 
