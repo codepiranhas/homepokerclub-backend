@@ -11,6 +11,7 @@ function jwt() {
         path: [
             // public routes that don't require authentication
             // '/users/authenticate', // Can be written as a string, but then it cannot be combined with regex
+            /^\/status/,
             /^\/users\/authenticate/,
             /^\/users\/register/,
             /^\/users\/forgotPassword/,
