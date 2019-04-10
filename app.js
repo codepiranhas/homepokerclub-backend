@@ -15,7 +15,7 @@ app.use('/users', require('./routes/user.routes'));
 app.use('/clubs', require('./routes/club.routes'));
 app.use('/tournaments', require('./routes/tournament.routes'));
 
-app.get('/status', (req, res) => res.send("It's alive!!"));
+app.get('/status', (req, res) => res.send("It's alive - heroku pipeline 1"));
 
 // global error handler
 app.use(errorHandler);
