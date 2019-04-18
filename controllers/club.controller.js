@@ -1,7 +1,7 @@
 // const crypto = require('crypto');
 // const jwt = require('jsonwebtoken');
 // const bcrypt = require('bcryptjs');
-const config = require('../config/keys');
+// const config = require('../config/keys');
 const db = require('../helpers/db');
 const mailService = require('../services/mail.service');
 const notificationService = require('../services/notification.service');
@@ -9,12 +9,7 @@ const notificationService = require('../services/notification.service');
 const ClubModel = db.Club;
 const UserModel = db.User;
 
-module.exports = {
-		create,
-		deleteClub,
-		addMember,
-		acceptInvitation
-};
+
 
 async function deleteClub(clubId) {
 	await ClubModel.deleteById(clubId);
@@ -97,3 +92,10 @@ async function acceptInvitation(params) {
 
 	return { user: updatedUser, club: updatedClub }
 }
+
+module.exports = {
+	create,
+	deleteClub,
+	addMember,
+	acceptInvitation,
+};

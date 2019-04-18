@@ -11,7 +11,10 @@ describe('##### /CLUB TESTS #####', function() {
     const userObj = await utils.user.create({ name: 'Ted Tester' });
     testCurrentUser = await utils.user.authenticateFake(userObj);
 
-    console.log('testCurrentUser: ', testCurrentUser);
+    console.log('testCurrentUser: ', testCurrentUser)
+
+
+    
   })
 
   after(async () => {
