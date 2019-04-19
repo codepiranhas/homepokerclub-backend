@@ -9,88 +9,85 @@ const notificationService = require('../services/notification.service');
 const ClubModel = db.Club;
 const UserModel = db.User;
 
-
-
 async function deleteClub(clubId) {
 	await ClubModel.deleteById(clubId);
 }
 
 async function create(clubParam, params) {
-	if (!clubParam || !clubParam.name || !params || !params._currentUser) {
-    throw 'Invalid parameters @ create @ club.controller';
+	if (!clubParam || !clubParam.name || !params || !params.currentUserId) {
+		throw new Error('Invalid parameters @ create @ club.controller');
 	}
-	
-	const savedClub = await ClubModel.create(clubParam, params._currentUser);
-	const updatedUser = await UserModel.addClub(params._currentUser, savedClub._id);
 
-  return { club: savedClub, user: updatedUser };
+	const savedClub = await ClubModel.create(clubParam, params.currentUserId);
+	const updatedUser = await UserModel.addClub(params.currentUserId, savedClub._id);
+
+	return { club: savedClub, user: updatedUser };
 }
 
 async function addMember(memberParam, params) {
-	const { _currentUser, _currentClub } = params;
+	const { currentUserId, currentClubId } = params;
 
-	if (!memberParam || !memberParam._user || !_currentUser || !_currentClub) {
-    throw 'Invalid parameters';
+	if (!memberParam || !memberParam.userId || !currentUserId || !currentClubId) {
+		throw new Error('Invalid parameters');
 	}
-	
+
 	const promises = [
-		UserModel.findById(_currentUser),
-		UserModel.findById(memberParam._user),
-		ClubModel.findById(_currentClub)
+		UserModel.findById(currentUserId),
+		UserModel.findById(memberParam.userId),
+		ClubModel.findById(currentClubId),
 	];
 
-	const [inviter, invitee, club ] = await Promise.all(promises);
+	const [inviter, invitee, club] = await Promise.all(promises);
 
 	if (inviter && invitee && club) {
 		// Check if the invitee is already in the club
-		if (club.members.some(member => member._user.toString() === memberParam._user)) {
-			throw 'User already in the club or invitation pending';
+		if (club.members.some(member => member.userId.toString() === memberParam.userId)) {
+			throw new Error('User already in the club or invitation pending');
 		}
 
 		// Add the new member to the club with status "pending"
-		const updatedClub = await ClubModel.addMember(_currentClub, memberParam);
+		const updatedClub = await ClubModel.addMember(currentClubId, memberParam);
 		// Create a notification for the member
 		await notificationService.create({
 			type: 'club-invitation',
 			message: `${inviter.name} has invited you to join the club ${updatedClub.name}`,
-			_sender: _currentUser,
-			_receiver: memberParam._user,
+			senderId: currentUserId,
+			receiverId: memberParam.userId,
 			body: {
-				_club: updatedClub._id
-			}
+				clubId: updatedClub._id,
+			},
 		});
 		// Send an email to the member
 		await mailService.sendClubInvitation(inviter, invitee, updatedClub);
 
 		return { club: updatedClub };
 	}
-	else {
-		throw 'No inviter and/or invitee and/or club found @ addMember @ club.controller';
-	}
+
+	throw new Error('No inviter and/or invitee and/or club found @ addMember @ club.controller');
 }
 
 async function acceptInvitation(params) {
-	const { _currentUser, _currentClub } = params;
+	const { currentUserId, currentClubId } = params;
 
-	if (!_currentUser || !_currentClub) {
-    throw 'Invalid parameters';
+	if (!currentUserId || !currentClubId) {
+		throw new Error('Invalid parameters');
 	}
 
-	const club = await ClubModel.findById(_currentClub);
-	const pendingMember = club.members.find(member => member._user.toString() === _currentUser);
+	const club = await ClubModel.findById(currentClubId);
+	const pendingMember = club.members.find(member => member.userId.toString() === currentUserId);
 
-	if (!pendingMember) { 
-		throw 'Pending member not found';
+	if (!pendingMember) {
+		throw new Error('Pending member not found');
 	}
 
 	if (pendingMember.status !== 'pending') {
-		throw 'Already joined';
+		throw new Error('Already joined');
 	}
 
-	const updatedUser = await UserModel.addClub(_currentUser, _currentClub);
-	const updatedClub = await ClubModel.updateMemberStatus({ _id: _currentClub, userId: _currentUser }, { status: 'accepted' });
+	const updatedUser = await UserModel.addClub(currentUserId, currentClubId);
+	const updatedClub = await ClubModel.updateMemberStatus({ _id: currentClubId, userId: currentUserId }, { status: 'accepted' });
 
-	return { user: updatedUser, club: updatedClub }
+	return { user: updatedUser, club: updatedClub };
 }
 
 module.exports = {

@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = {
   html: function (verifyLink, token) {
     return `
@@ -310,3 +311,4 @@ module.exports = {
   `
   }
 }
+/* eslint-enable */

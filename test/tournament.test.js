@@ -1,93 +1,94 @@
-const app = require('../app');
 const mongoose = require('mongoose');
 const request = require('supertest');
 const chai = require('chai');
-const expect = chai.expect;
 const config = require('../config/keys');
 const utils = require('./utils');
+const app = require('../app');
 
-describe('##### /TOURNAMENT TESTS #####', function() {
-  let testCurrentUser;
-  let testClub;
+const { expect } = chai;
 
-  before(async () => {
-    if (!mongoose.connection.db) {
-      console.log('Creating a new db connection')
-      await mongoose.connect(process.env.MONGODB_URI || config.mongoURI, { useCreateIndex: true, useNewUrlParser: true, useFindAndModify: false })
-    }
-    else {
-      console.log('DB connected already');
-    }
+/* eslint-disable func-names */
+/* eslint-disable prefer-arrow-callback */
 
-    const userObj = await utils.user.create({ name: 'Ted Tester' });
-    testCurrentUser = await utils.user.authenticateFake(userObj);
-    testClub = await utils.club.create({ _owner: testCurrentUser._id });
-  })
+describe('##### /TOURNAMENT TESTS #####', function () {
+	let testCurrentUser;
+	let testClub;
 
-  after(async () => {
-    // TODO: Run them at the same time
-    await utils.club.deleteClub(testClub);
-    await utils.user.deleteUser(testCurrentUser);
-  });
+	before(async function () {
+		if (!mongoose.connection.db) {
+			await mongoose.connect(process.env.MONGODB_URI || config.mongoURI,
+				{ useCreateIndex: true, useNewUrlParser: true, useFindAndModify: false });
+		}
 
-  describe('Create a new tournament without a name', function() { 
-    it('should return a status 400', function(done) { 
-      request(app)
-        .post('/tournaments/create')
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({})
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(400); 
-          done(); 
-        }); 
-    });
-  });
+		const userObj = await utils.user.create({ name: 'Ted Tester' });
+		testCurrentUser = await utils.user.authenticateFake(userObj);
+		testClub = await utils.club.create({ _owner: testCurrentUser._id });
+	});
 
-  describe('Correctly create a new tournament', function() {
-    let tournamentObj;
+	after(async function () {
+		// TODO: Run them at the same time
+		await utils.club.deleteClub(testClub);
+		await utils.user.deleteUser(testCurrentUser);
+	});
 
-    after(async () => {
-      if (tournamentObj) {
-        await utils.tournament.deleteTournament(tournamentObj)
-      }
-    });
+	describe('Create a new tournament without a name', function () {
+		it('should return a status 400', function (done) {
+			request(app)
+				.post('/tournaments/create')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${testCurrentUser.token}`)
+				.send({})
+				.end(function (err, res) {
+					expect(res.statusCode).to.equal(400);
+					done();
+				});
+		});
+	});
 
-    it('should return a status 200', function(done) { 
-      request(app)
-        .post('/tournaments/create')
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({ name: 'testtournament__created', _club: testClub._id })
-        .end(function(err, res) {
-          tournamentObj = res.body.tournament;
+	describe('Correctly create a new tournament', function () {
+		let tournamentObj;
 
-          expect(res.statusCode).to.equal(200); 
-          done(); 
-        }); 
-    });
-  });
+		after(async function () {
+			if (tournamentObj) {
+				await utils.tournament.deleteTournament(tournamentObj);
+			}
+		});
 
-  describe('Correctly delete an existing tournament', function() { 
-    let tournamentObj;
+		it('should return a status 200', function (done) {
+			request(app)
+				.post('/tournaments/create')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${testCurrentUser.token}`)
+				.send({ name: 'testtournament__created', clubId: testClub._id })
+				.end(function (err, res) {
+					tournamentObj = res.body.tournament;
 
-    before(async () => {
-      tournamentObj = await utils.tournament.create({ _club: testClub._id });
-    });
+					expect(res.statusCode).to.equal(200);
+					done();
+				});
+		});
+	});
 
-    after(async () => {
-      await utils.tournament.deleteTournament(tournamentObj);
-    });
+	describe('Correctly delete an existing tournament', function () {
+		let tournamentObj;
 
-    it('should return a status 200', function(done) { 
-      request(app)
-        .delete(`/tournaments/${tournamentObj._id}/delete`)
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(200); 
-          done(); 
-        }); 
-    });
-  });
+		before(async function () {
+			tournamentObj = await utils.tournament.create({ clubId: testClub._id });
+		});
+
+		after(async function () {
+			await utils.tournament.deleteTournament(tournamentObj);
+		});
+
+		it('should return a status 200', function (done) {
+			request(app)
+				.delete(`/tournaments/${tournamentObj._id}/delete`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${testCurrentUser.token}`)
+				.end(function (err, res) {
+					expect(res.statusCode).to.equal(200);
+					done();
+				});
+		});
+	});
 });

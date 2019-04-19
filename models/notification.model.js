@@ -1,19 +1,20 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+
+const { Schema } = mongoose;
 
 const schema = new Schema({
-  type: { type: String }, // club-invite, club-member-joined, club-member-left, tournament-invite, 
-  message: { type: String },
+	type: { type: String }, // club-invite, club-member-joined, club-member-left, tournament-invite, 
+	message: { type: String },
 
-  body: {},
+	body: {},
 
-  _sender: { type : Schema.Types.ObjectId, ref: 'User' },
-  _receiver: { type : Schema.Types.ObjectId, ref: 'User' },
+	senderId: { type: Schema.Types.ObjectId, ref: 'User' },
+	receiverId: { type: Schema.Types.ObjectId, ref: 'User' },
 
-  isViewed: { type: Boolean, default: false },
+	isViewed: { type: Boolean, default: false },
 
-  createdAt: { type: Date, default: Date.now },
-  viewedAt: { type: Date }
+	createdAt: { type: Date, default: Date.now },
+	viewedAt: { type: Date },
 });
 
 schema.set('toJSON', { virtuals: true });
@@ -23,36 +24,30 @@ const Notification = mongoose.model('Notification', schema);
 
 // METHODS
 module.exports = {
-  create: (obj) => {
-    let notificationDoc = new Notification(obj);
+	create: (obj) => {
+		const notificationDoc = new Notification(obj);
 
-    return notificationDoc.save();
-  },
+		return notificationDoc.save();
+	},
 
-  findById: (_id) => {
-    return Notification.findOne({ _id });
-  },
+	findById: _id => Notification.findOne({ _id }),
 
-  deleteById: (_id) => {
-    return Notification.deleteOne({ _id });
-  },
+	deleteById: _id => Notification.deleteOne({ _id }),
 
-  /**
+	/**
    * Universal update method
-   * Parameters (args) should be passed as an object with correct property names according to the database schema.
+	 * Parameters (args) should be passed as an object
+	 * with correct property names according to the database schema.
    * @param query (object)
    * @param properties (object)
-   * 
+   *
    * @example
    * updateOne({ _id: XXX, isVerified: false }, { "social.facebook.id": 'YYY', isVerified: true })
    */
-  updateOne: (query, args) => {
-    return Notification.updateOne(
-      { ...query },
-      { $set: { ...args } },
-      { new: true }
-    );
-  }
-
+	updateOne: (query, args) => Notification.updateOne(
+		{ ...query },
+		{ $set: { ...args } },
+		{ new: true },
+	),
 // END OF METHODS
-}
+};

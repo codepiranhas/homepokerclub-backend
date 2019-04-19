@@ -1,53 +1,52 @@
 // const crypto = require('crypto');
 // const jwt = require('jsonwebtoken');
 // const bcrypt = require('bcryptjs');
-const config = require('../config/keys');
+// const config = require('../config/keys');
 const db = require('../helpers/db');
 // const mailService = require('services/mail.service');
 // const tokenService = require('services/token.service');
 const NotificationModel = db.Notification;
-const ClubModel = db.Club;
+// const ClubModel = db.Club;
 const UserModel = db.User;
 
-module.exports = {
-		create,
-		view,
-		deleteNotification
-};
-
 async function create(notificationParam) {
-	console.log('notificationParam: ', notificationParam);
-	
-	if (!notificationParam || !notificationParam.type || !notificationParam._receiver || !notificationParam.message) {
-    throw 'Invalid parameters';
+	if (!notificationParam
+		|| !notificationParam.type
+		|| !notificationParam.receiverId
+		|| !notificationParam.message) {
+		throw new Error('Invalid parameters');
 	}
-	
+
 	const savedNotification = await NotificationModel.create(notificationParam);
 
-  return { notification: savedNotification };
+	return { notification: savedNotification };
 }
 
 async function view(params) {
-	if (!params._currentUser || params._invitation) {
-    throw 'Invalid parameters';
+	if (!params.currentUserId || params.invitationId) {
+		throw new Error('Invalid parameters');
 	}
 
-	const invitation = await NotificationModel.findById(params._invitation);
+	const invitation = await NotificationModel.findById(params.invitationId);
 
-	console.log('invitation found: ', invitation);
-
-	if (invitation._invitedToClub) {
-		console.log('It is a club invitation');
-		const updatedUser = await UserModel.addClub(params._currentUser, invitation.invitedToClub);
+	if (invitation.invitedToClubId) {
+		const updatedUser = await UserModel.addClub(params.currentUserId, invitation.invitedToClubId);
 		// const updatedClub = await ClubModel.addMember(invitation.invitedTo, userId);
 
 		NotificationModel.updateOne({ _id: invitation }, { resolvedTo: 'accepted', resolvedAt: Date.now });
 
-		return { user: updatedUser, }
+		return { user: updatedUser };
 	}
+
+	throw new Error('Invalid parameters');
 }
 
 async function deleteNotification(notificationId) {
 	await NotificationModel.deleteById(notificationId);
 }
 
+module.exports = {
+	create,
+	view,
+	deleteNotification,
+};

@@ -1,29 +1,30 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+
+const { Schema } = mongoose;
 
 const schema = new Schema({
-  _userId: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: 'User'
-  },
+	userId: {
+		type: Schema.Types.ObjectId,
+		required: true,
+		ref: 'User',
+	},
 
-  token: {
-    type: String,
-    required: true
-  },
+	token: {
+		type: String,
+		required: true,
+	},
 
-  type: {
-    type: String,
-    required: true
-  },
+	type: {
+		type: String,
+		required: true,
+	},
 
-  createdAt: {
-    type: Date,
-    required: true,
-    default: Date.now,
-    expires: 36000
-  } 
+	createdAt: {
+		type: Date,
+		required: true,
+		default: Date.now,
+		expires: 36000,
+	},
 });
 
 schema.set('toJSON', { virtuals: true });
@@ -34,23 +35,19 @@ const Token = mongoose.model('Token', schema);
 // METHODS
 
 module.exports = {
-  create: (obj) => {
-    let tokenDoc = new Token(obj);
-    return tokenDoc.save();
-  },
+	create: (obj) => {
+		const tokenDoc = new Token(obj);
+		return tokenDoc.save();
+	},
 
-  findById: (_id) => {
-    return Token.findOne({ _id });
-  },
+	findById: _id => Token.findOne({ _id }),
 
-  findByTokenAndType: (args) => {
-    const { token, type } = args;
+	findByTokenAndType: (args) => {
+		const { token, type } = args;
 
-    return Token.findOne({ token, type });
-  },
+		return Token.findOne({ token, type });
+	},
 
-  deleteById: (_id) => {
-    return Token.deleteOne({ _id });
-  }
+	deleteById: _id => Token.deleteOne({ _id }),
 // END OF METHODS
-}
+};
