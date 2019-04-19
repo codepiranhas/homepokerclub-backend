@@ -23,7 +23,7 @@ describe('##### /CLUB TESTS #####', function () {
 	describe('Create a new club without a name', function () {
 		it('should return a status 400', function (done) {
 			request(app)
-				.post('/clubs/create')
+				.post('/v1/clubs/create')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({})
@@ -45,7 +45,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 200', function (done) {
 			request(app)
-				.post('/clubs/create')
+				.post('/v1/clubs/create')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ name: 'testclub__created' })
@@ -71,7 +71,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should delete the club and return a status 200', function (done) {
 			request(app)
-				.delete(`/clubs/${clubObj._id}/delete`)
+				.delete(`/v1/clubs/${clubObj._id}/delete`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.end(async function (err, res) {
@@ -97,7 +97,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 400', function (done) {
 			request(app)
-				.post(`/clubs/${clubObj._id}/addMember`)
+				.post(`/v1/clubs/${clubObj._id}/addMember`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ userId: null })
@@ -127,7 +127,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 400', function (done) {
 			request(app)
-				.post(`/clubs/${clubObj._id}/addMember`)
+				.post(`/v1/clubs/${clubObj._id}/addMember`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ userId: userObj._id })
@@ -154,7 +154,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 200', function (done) {
 			request(app)
-				.post(`/clubs/${clubObj._id}/addMember`)
+				.post(`/v1/clubs/${clubObj._id}/addMember`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ userId: userObj._id })

@@ -34,7 +34,7 @@ describe('##### /TOURNAMENT TESTS #####', function () {
 	describe('Create a new tournament without a name', function () {
 		it('should return a status 400', function (done) {
 			request(app)
-				.post('/tournaments/create')
+				.post('/v1/tournaments/create')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${testCurrentUser.token}`)
 				.send({})
@@ -56,7 +56,7 @@ describe('##### /TOURNAMENT TESTS #####', function () {
 
 		it('should return a status 200', function (done) {
 			request(app)
-				.post('/tournaments/create')
+				.post('/v1/tournaments/create')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${testCurrentUser.token}`)
 				.send({ name: 'testtournament__created', clubId: testClub._id })
@@ -82,7 +82,7 @@ describe('##### /TOURNAMENT TESTS #####', function () {
 
 		it('should return a status 200', function (done) {
 			request(app)
-				.delete(`/tournaments/${tournamentObj._id}/delete`)
+				.delete(`/v1/tournaments/${tournamentObj._id}/delete`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${testCurrentUser.token}`)
 				.end(function (err, res) {

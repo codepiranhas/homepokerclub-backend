@@ -25,7 +25,7 @@ describe('##### /USER TESTS #####', function () {
 	describe('Register user without an email and password', function () {
 		it('should return a status 400', function (done) {
 			request(app)
-				.post('/users/register')
+				.post('/v1/users/register')
 				.send({})
 				.set('Accept', 'application/json')
 				.end(function (err, res) {
@@ -48,7 +48,7 @@ describe('##### /USER TESTS #####', function () {
 
 		it('should return a status 400', function (done) {
 			request(app)
-				.post('/users/register')
+				.post('/v1/users/register')
 				.send({ email: userObj.email, password: '12345678' })
 				.set('Accept', 'application/json')
 				.end(function (err, res) {
@@ -69,7 +69,7 @@ describe('##### /USER TESTS #####', function () {
 
 		it('should return status 200', function (done) {
 			request(app)
-				.post('/users/register')
+				.post('/v1/users/register')
 				.send({ email: `testuser_${Math.random()}_created@test.com`, password: '12345678' })
 				.set('Accept', 'application/json')
 				.end(function (err, res) {
