@@ -12,9 +12,9 @@ app.use(cors());
 app.use(jwt());
 
 // api routes
-app.use('/users', require('./routes/user.routes'));
-app.use('/clubs', require('./routes/club.routes'));
-app.use('/tournaments', require('./routes/tournament.routes'));
+app.use('/v1/users', require('./routes/user.routes'));
+app.use('/v1/clubs', require('./routes/club.routes'));
+app.use('/v1/tournaments', require('./routes/tournament.routes'));
 
 app.get('/status', (req, res) => res.send("It's alive - heroku pipeline 2 - v1.0"));
 
