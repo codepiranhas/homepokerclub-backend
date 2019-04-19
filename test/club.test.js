@@ -1,166 +1,167 @@
-const app = require('../app');
 const request = require('supertest');
 const chai = require('chai');
-const expect = chai.expect;
 const utils = require('./utils');
+const app = require('../app');
 
-describe('##### /CLUB TESTS #####', function() {
-  let testCurrentUser;  // The "currently logged in" user that will be used across all tests
+const { expect } = chai;
 
-  before(async () => {
-    const userObj = await utils.user.create({ name: 'Ted Tester' });
-    testCurrentUser = await utils.user.authenticateFake(userObj);
+/* eslint-disable func-names */
+/* eslint-disable prefer-arrow-callback */
 
-    console.log('testCurrentUser: ', testCurrentUser);
-  })
+describe('##### /CLUB TESTS #####', function () {
+	let currentUser; // The "currently logged in" user that will be used across all tests
 
-  after(async () => {
-    console.log('Running global after for club.test.js');
-    await utils.user.deleteUser(testCurrentUser);
-  });
+	before(async function () {
+		const userObj = await utils.user.create({ name: 'Ted Tester' });
+		currentUser = await utils.user.authenticateFake(userObj);
+	});
 
-  describe('Create a new club without a name', function() { 
-    it('should return a status 400', function(done) { 
-      request(app)
-        .post('/clubs/create')
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({})
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(400); 
-          done(); 
-        }); 
-    });
-  });
+	after(async function () {
+		await utils.user.deleteUser(currentUser);
+	});
 
-  describe('Correctly create a new club', function() { 
-    let clubObj;
+	describe('Create a new club without a name', function () {
+		it('should return a status 400', function (done) {
+			request(app)
+				.post('/clubs/create')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.send({})
+				.end(function (err, res) {
+					expect(res.statusCode).to.equal(400);
+					done();
+				});
+		});
+	});
 
-    after(async () => {
-      if (clubObj) {
-        await utils.club.deleteClub(clubObj)
-      }
-    });
+	describe('Correctly create a new club', function () {
+		let clubObj;
 
-    it('should return a status 200', function(done) { 
-      request(app)
-        .post('/clubs/create')
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({ name: 'testclub__created' })
-        .end(function(err, res) {
-          clubObj = res.body.club;
+		after(async function () {
+			if (clubObj) {
+				await utils.club.deleteClub(clubObj);
+			}
+		});
 
-          expect(res.statusCode).to.equal(200); 
-          done(); 
-        }); 
-    });
-  });
+		it('should return a status 200', function (done) {
+			request(app)
+				.post('/clubs/create')
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.send({ name: 'testclub__created' })
+				.end(function (err, res) {
+					clubObj = res.body.club;
 
-  describe('Correctly delete an existing club', function() { 
-    let clubObj;
+					expect(res.statusCode).to.equal(200);
+					done();
+				});
+		});
+	});
 
-    before(async () => {
-      clubObj = await utils.club.create({ _owner: testCurrentUser._id });
-    })
+	describe('Correctly delete an existing club', function () {
+		let clubObj;
 
-    after(async () => {
-      await utils.club.deleteClub(clubObj);
-    })
+		before(async function () {
+			clubObj = await utils.club.create({ ownerId: currentUser._id });
+		});
 
-    it('should delete the club and return a status 200', function(done) { 
-      request(app)
-        .delete(`/clubs/${clubObj._id}/delete`)
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .end(async function(err, res) {
-          const clubThatShouldNotExist = await utils.club.findById(clubObj);
+		after(async function () {
+			await utils.club.deleteClub(clubObj);
+		});
 
-          expect(clubThatShouldNotExist).to.equal(null)
-          expect(res.statusCode).to.equal(200);
-          done();
-        }); 
-    });
-  });
+		it('should delete the club and return a status 200', function (done) {
+			request(app)
+				.delete(`/clubs/${clubObj._id}/delete`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.end(async function (err, res) {
+					const clubThatShouldNotExist = await utils.club.findById(clubObj);
 
-  describe('Add member to club - no userId', function() { 
-    let clubObj;
+					expect(clubThatShouldNotExist).to.equal(null);
+					expect(res.statusCode).to.equal(200);
+					done();
+				});
+		});
+	});
 
-    before(async () => {
-      clubObj = await utils.club.create({ _owner: testCurrentUser._id });
-    })
+	describe('Add member to club - no userId', function () {
+		let clubObj;
 
-    after(async () => {
-      await utils.club.deleteClub(clubObj);
-    })
+		before(async function () {
+			clubObj = await utils.club.create({ ownerId: currentUser._id });
+		});
 
-    it('should return a status 400', function(done) { 
-      request(app)
-        .post(`/clubs/${clubObj._id}/addMember`)
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({ _user: null })
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(400); 
-          done(); 
-        }); 
-    });
-  });
+		after(async function () {
+			await utils.club.deleteClub(clubObj);
+		});
 
-  describe('Add member to club - already joined', function() { 
-    let clubObj;
-    let userObj;
+		it('should return a status 400', function (done) {
+			request(app)
+				.post(`/clubs/${clubObj._id}/addMember`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.send({ userId: null })
+				.end((err, res) => {
+					expect(res.statusCode).to.equal(400);
+					done();
+				});
+		});
+	});
 
-    before(async () => {
-      clubObj = await utils.club.create({ _owner: testCurrentUser._id });
-      userObj = await utils.user.create();
+	describe('Add member to club - already joined', function () {
+		let clubObj;
+		let userObj;
 
-      await utils.club.addMember(userObj, clubObj);
-    })
+		before(async function () {
+			clubObj = await utils.club.create({ ownerId: currentUser._id });
+			userObj = await utils.user.create();
 
-    after(async () => {
-      // TODO: Run them at the same time
-      await utils.club.deleteClub(clubObj);
-      await utils.user.deleteUser(userObj);
-    })
+			await utils.club.addMember(userObj, clubObj);
+		});
 
-    it('should return a status 400', function(done) { 
-      request(app)
-        .post(`/clubs/${clubObj._id}/addMember`)
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({ _user: userObj._id })
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(400); 
-          done(); 
-        }); 
-    });
-  });
+		after(async function () {
+			// TODO: Run them at the same time
+			await utils.club.deleteClub(clubObj);
+			await utils.user.deleteUser(userObj);
+		});
 
-  describe('Add member to club successfully', function() { 
-    let userObj;
-    let clubObj;
+		it('should return a status 400', function (done) {
+			request(app)
+				.post(`/clubs/${clubObj._id}/addMember`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.send({ userId: userObj._id })
+				.end(function (err, res) {
+					expect(res.statusCode).to.equal(400);
+					done();
+				});
+		});
+	});
 
-    before(async () => {
-      userObj = await utils.user.create();
-      clubObj = await utils.club.create({ _owner: testCurrentUser._id });
-    });
+	describe('Add member to club successfully', function () {
+		let userObj;
+		let clubObj;
 
-    after(async () => {
-      await utils.club.deleteClub(clubObj);
-      await utils.user.deleteUser(userObj);
-    });
+		before(async function () {
+			userObj = await utils.user.create();
+			clubObj = await utils.club.create({ ownerId: currentUser._id });
+		});
 
-    it('should return a status 200', function(done) { 
-      request(app)
-        .post(`/clubs/${clubObj._id}/addMember`)
-        .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer ' + testCurrentUser.token)
-        .send({ _user: userObj._id })
-        .end(function(err, res) {
-          expect(res.statusCode).to.equal(200); 
-          done(); 
-        }); 
-    });
-  });
+		after(async function () {
+			await utils.club.deleteClub(clubObj);
+			await utils.user.deleteUser(userObj);
+		});
+
+		it('should return a status 200', function (done) {
+			request(app)
+				.post(`/clubs/${clubObj._id}/addMember`)
+				.set('Accept', 'application/json')
+				.set('Authorization', `Bearer ${currentUser.token}`)
+				.send({ userId: userObj._id })
+				.end(function (err, res) {
+					expect(res.statusCode).to.equal(200);
+					done();
+				});
+		});
+	});
 });

@@ -1,78 +1,93 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/keys');
 const randomGenerators = require('../helpers/randomGenerators');
-
 const UserModel = require('../models/user.model');
 const ClubModel = require('../models/club.model');
 const TournamentModel = require('../models/tournament.model');
+
 module.exports = {
-  user: {
-    create: async (userObj) => {
-      const user = { ...userObj };
+	user: {
+		create: async (userObj) => {
+			const user = { ...userObj };
 
-      if (!user.email) { user.email = `testuser_${randomGenerators.uuid()}@test.com`; }
-      if (!user.password) { user.password = '12345678'; }
+			if (!user.email) { user.email = `testuser_${randomGenerators.uuid()}@test.com`; }
+			if (!user.password) { user.password = '12345678'; }
 
-      const savedUser = await UserModel.createForTest(user);
+			const savedUser = await UserModel.createForTest(user);
+			const { password, ...userWithoutPassword } = savedUser.toObject();
 
-      const { password, ...userWithoutPassword } = savedUser.toObject();
-      
-      return userWithoutPassword;
-    },
+			return userWithoutPassword;
+		},
 
-    findById: async (userObj) => {
-      return await UserModel.findByIdForTest(userObj._id);
-    },
+		findById: async (userObj) => {
+			const user = await UserModel.findByIdForTest(userObj._id);
 
-    authenticateFake: async (userObj) => {
-      const token = jwt.sign({ sub: userObj._id }, config.secretJWT);
-  
-      return { ...userObj, token };
-    },
+			return user;
+		},
 
-    deleteUser: async (user) => {
-      return await UserModel.deleteByIdForTest(user._id);
-    },
-  },
+		authenticateFake: async (userObj) => {
+			const token = jwt.sign({ sub: userObj._id }, config.secretJWT);
 
-  club: {
-    create: async (clubObj) => {
-      const club = { ...clubObj }
-      if (!club.name) {
-        club.name = `testClub_${randomGenerators.randomStringOfLength(3)}_toBeDeleted`;
-      }
+			return { ...userObj, token };
+		},
 
-      return await ClubModel.createForTest(club);  
-    },
+		deleteUser: async (user) => {
+			const res = UserModel.deleteByIdForTest(user._id);
 
-    findById: async (clubObj) => {
-      return await ClubModel.findByIdForTest(clubObj._id);
-    },
+			return res;
+		},
+	},
 
-    deleteClub: async (club) => {
-      return await ClubModel.deleteByIdForTest(club._id);
-    },
+	club: {
+		create: async (clubObj) => {
+			const club = { ...clubObj };
 
-    addMember: async (user, club) => {
-      const member = { _user: user._id }
+			if (!club.name) {
+				club.name = `testClub_${randomGenerators.randomStringOfLength(3)}_toBeDeleted`;
+			}
 
-      return await ClubModel.addMemberForTest(club._id, member);
-    }
-  },
+			const clubCreated = await ClubModel.createForTest(club);
 
-  tournament: {
-    create: async (tournamentObj) => {
-      const tournament = { ...tournamentObj }
-      if (!tournament.name) {
-        tournament.name = `testTournament_${randomGenerators.randomStringOfLength(3)}_toBeDeleted`;
-      }
+			return clubCreated;
+		},
 
-      return await TournamentModel.createForTest(tournament);  
-    },
+		findById: async (clubObj) => {
+			const club = await ClubModel.findByIdForTest(clubObj._id);
 
-    deleteTournament: async (tournament) => {
-      return await TournamentModel.deleteByIdForTest(tournament._id);
-    },
-  }
+			return club;
+		},
 
-}
+		deleteClub: async (club) => {
+			const res = await ClubModel.deleteByIdForTest(club._id);
+
+			return res;
+		},
+
+		addMember: async (user, club) => {
+			const member = { userId: user._id };
+			const clubUpdated = await ClubModel.addMemberForTest(club._id, member);
+
+			return clubUpdated;
+		},
+	},
+
+	tournament: {
+		create: async (tournamentObj) => {
+			const tournament = { ...tournamentObj };
+
+			if (!tournament.name) {
+				tournament.name = `testTournament_${randomGenerators.randomStringOfLength(3)}_toBeDeleted`;
+			}
+
+			const tournamentCreated = await TournamentModel.createForTest(tournament);
+
+			return tournamentCreated;
+		},
+
+		deleteTournament: async (tournament) => {
+			const res = await TournamentModel.deleteByIdForTest(tournament._id);
+
+			return res;
+		},
+	},
+};

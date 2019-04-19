@@ -1,125 +1,131 @@
-const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const config = require('../config/keys');
 const db = require('../helpers/db');
 const mailService = require('../services/mail.service');
 const tokenService = require('../services/token.service');
+
 const UserModel = db.User;
 
-module.exports = {
-    register,
-    authenticate,
-    confirmNewUser,
-    forgotPassword,
-    validateResetPasswordToken,
-    resetPassword,
-    getAll,
-    getById,
-    update,
-    deleteUser
-};
-
 async function register(userParam) {
-  if (!userParam || !userParam.email || !userParam.password) {
-    throw 'Invalid parameters';
-  }
+	if (!userParam || !userParam.email || !userParam.password) {
+		throw new Error('Invalid parameters');
+	}
 
-  if (await UserModel.findByEmail(userParam.email)) {
-    throw 'Email already exists.';
-  }
+	if (await UserModel.findByEmail(userParam.email)) {
+		throw new Error('Email already exists.');
+	}
 
-  const savedUser = await UserModel.create(userParam);
-  const { password, ...userWithoutPassword } = savedUser.toObject();
+	const savedUser = await UserModel.create(userParam);
+	const { password, ...userWithoutPassword } = savedUser.toObject();
 
-  await mailService.sendVerifyAccount(savedUser);
+	await mailService.sendVerifyAccount(savedUser);
 
-  return userWithoutPassword;
+	return userWithoutPassword;
 }
 
-async function authenticate({ email, password }) {
-  const user = await UserModel.findByEmail(email);
+async function authenticate(userParam) {
+	const user = await UserModel.findByEmail(userParam.email);
 
-  if (user && bcrypt.compareSync(password, user.password)) {
-    const { password, ...userWithoutPassword } = user.toObject();
-    const token = jwt.sign({ sub: user._id }, config.secretJWT);
+	if (user && bcrypt.compareSync(userParam.password, user.password)) {
+		const { password, ...userWithoutPassword } = user.toObject();
+		const token = jwt.sign({ sub: user._id }, config.secretJWT);
 
-    return { ...userWithoutPassword, token };
-  }
-  else { 
-    throw 'Email or password is incorrect'; }
+		return { ...userWithoutPassword, token };
+	}
+
+	throw new Error('Email or password is incorrect');
 }
 
 async function forgotPassword({ email }) {
-  const user = await UserModel.findByEmail(email);
+	const user = await UserModel.findByEmail(email);
 
-  // Fakely return success - as we should not allow the user to know our registered emails
-  if (!user) { return; }
+	// Fakely return success - as we should not allow the user to know our registered emails
+	if (!user) { return; }
 
-  await mailService.sendResetPassword(user);
+	await mailService.sendResetPassword(user);
 }
 
 async function validateResetPasswordToken(token) {
-  if (await tokenService.find(token, 'reset-password')) {
-    return { status: "OK", msg: "token exists" };
-  }
+	if (await tokenService.find(token, 'reset-password')) {
+		return { status: 'NOK', msg: 'token exists' };
+	}
 
-  throw 'The request has expired. Please try again.';
+	throw new Error('The request has expired. Please try again.');
 }
 
 async function confirmNewUser(token) {
-  const tokenDoc = await tokenService.find(token, 'new-user' );
+	const tokenDoc = await tokenService.find(token, 'new-user');
 
-  if (tokenDoc) {
-    return await UserModel.updateUserToVerified(tokenDoc._userId);
-  }
-  
-  throw 'Token not found';
+	if (tokenDoc) {
+		const updatedUser = await UserModel.updateUserToVerified(tokenDoc.userId);
+		return updatedUser;
+	}
+
+	throw new Error('Token not found');
 }
 
 async function resetPassword({ password, token }) {
-  const tokenDoc = await tokenService.find(token, 'reset-password');
-    
-  if (!tokenDoc) { throw 'The request has expired. Please try again.'; };
+	const tokenDoc = await tokenService.find(token, 'reset-password');
 
-  const user = await UserModel.findById(tokenDoc._userId);
+	if (!tokenDoc) { throw new Error('The request has expired. Please try again.'); }
 
-  if (!user) { throw 'User not found'; }
+	const user = await UserModel.findById(tokenDoc.userId);
 
-  user.password = password;
-  user.isVerified = true;
+	if (!user) { throw new Error('User not found'); }
 
-  await UserModel.saveUpdatedUser(user);
+	user.password = password;
+	user.isVerified = true;
+
+	await UserModel.saveUpdatedUser(user);
 }
 
 async function getAll() {
-  // return await User.find().select('-hash');
+	const user = await UserModel.find().select('-hash');
+
+	return user;
 }
 
 async function getById(id) {
-  return await UserModel.findById(id);
+	const user = await UserModel.findById(id);
+
+	return user;
 }
 
 async function update(id, userParam) {
-  const user = await User.findById(id);
-  
-  // validate
-  if (!user) throw 'User not found';
-  if (user.username !== userParam.username && await User.findOne({ username: userParam.username })) {
-    throw 'Username "' + userParam.username + '" is already taken';
-  }
+	const user = await UserModel.findById(id);
 
-  // hash password if it was entered
-  if (userParam.password) {
-    userParam.hash = bcrypt.hashSync(userParam.password, 10);
-  }
+	// validate
+	if (!user) { throw new Error('User not found'); }
+	if (user.username !== userParam.username
+		&& await UserModel.findOne({ username: userParam.username })) {
+		throw new Error(`Username ${userParam.username} is already taken`);
+	}
 
-  // copy userParam properties to user
-  Object.assign(user, userParam);
+	// hash password if it was entered
+	if (userParam.password) {
+		userParam.hash = bcrypt.hashSync(userParam.password, 10); // eslint-disable-line
 
-  await user.save();
+		// copy userParam properties to user
+		Object.assign(user, userParam);
+
+		await user.save();
+	}
 }
 
 async function deleteUser(userId) {
-  await UserModel.deleteById(userId);
+	await UserModel.deleteById(userId);
 }
+
+module.exports = {
+	register,
+	authenticate,
+	confirmNewUser,
+	forgotPassword,
+	validateResetPasswordToken,
+	resetPassword,
+	getAll,
+	getById,
+	update,
+	deleteUser,
+};
