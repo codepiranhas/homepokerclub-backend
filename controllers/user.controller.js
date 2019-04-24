@@ -28,13 +28,16 @@ async function authenticate(userParam) {
 	const user = await UserModel.findByEmail(userParam.email);
 
 	if (user && bcrypt.compareSync(userParam.password, user.password)) {
+		if (!user.isVerified) {
+			throw new Error('Please verify your account first.');
+		}
 		const { password, ...userWithoutPassword } = user.toObject();
 		const token = jwt.sign({ sub: user._id }, config.secretJWT);
 
 		return { ...userWithoutPassword, token };
 	}
 
-	throw new Error('Email or password is incorrect');
+	throw new Error('Email or password is incorrect.');
 }
 
 async function forgotPassword({ email }) {
