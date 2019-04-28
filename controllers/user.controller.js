@@ -7,13 +7,15 @@ const tokenService = require('../services/token.service');
 
 const UserModel = db.User;
 
-async function register(userParam) {
+async function register(req, res, next) {
+	const userParam = req.body;
+
 	if (!userParam || !userParam.email || !userParam.password) {
-		throw new Error('Invalid parameters');
+		return next(new Error('Invalid parameters'));
 	}
 
 	if (await UserModel.findByEmail(userParam.email)) {
-		throw new Error('Email already exists.');
+		return next(new Error('Email already exists.'));
 	}
 
 	const savedUser = await UserModel.create(userParam);
@@ -21,66 +23,87 @@ async function register(userParam) {
 
 	await mailService.sendVerifyAccount(savedUser);
 
-	return userWithoutPassword;
+	return res.status(200).json(userWithoutPassword);
 }
 
-async function authenticate(userParam) {
+async function authenticate(req, res, next) {
+	const userParam = req.body;
+
 	const user = await UserModel.findByEmail(userParam.email);
 
 	if (user && bcrypt.compareSync(userParam.password, user.password)) {
 		if (!user.isVerified) {
-			throw new Error('Please verify your account first.');
+			return next(new Error('Please verify your account first.'));
 		}
 		const { password, ...userWithoutPassword } = user.toObject();
 		const token = jwt.sign({ sub: user._id }, config.secretJWT);
 
-		return { ...userWithoutPassword, token };
+		return res.status(200).json({ ...userWithoutPassword, token });
 	}
 
-	throw new Error('Email or password is incorrect.');
+	return next(new Error('Email or password is incorrect.'));
 }
 
-async function forgotPassword({ email }) {
+async function forgotPassword(req, res, next) {
+	const {	email } = req.body;
+
+	if (!email) {
+		return next(new Error('Invalid parameters.'));
+	}
 	const user = await UserModel.findByEmail(email);
 
-	// Fakely return success - as we should not allow the user to know our registered emails
-	if (!user) { return; }
-
-	await mailService.sendResetPassword(user);
+	if (user) {
+		await mailService.sendResetPassword(user);
+	}
+	// Always return success even if no user was found
+	// to prevent showing people if an email is registered
+	return res.status(200).json({ message: 'success' });
 }
 
-async function validateResetPasswordToken(token) {
+async function validateResetPasswordToken(req, res, next) {
+	const { token } = req.params;
+
 	if (await tokenService.find(token, 'reset-password')) {
-		return { status: 'NOK', msg: 'token exists' };
+		return res.status(200).json({ message: 'success' });
 	}
 
-	throw new Error('The request has expired. Please try again.');
+	return next(new Error('The request has expired. Please try again.'));
 }
 
-async function confirmNewUser(token) {
+async function confirmNewUser(req, res, next) {
+	const { token } = req.params;
+
 	const tokenDoc = await tokenService.find(token, 'new-user');
 
 	if (tokenDoc) {
 		const updatedUser = await UserModel.updateUserToVerified(tokenDoc.userId);
-		return updatedUser;
+		return res.status(200).json(updatedUser);
 	}
 
-	throw new Error('Token not found');
+	return next(new Error('Token not found'));
 }
 
-async function resetPassword({ password, token }) {
+async function resetPassword(req, res, next) {
+	const { password, token } = req.body;
+
 	const tokenDoc = await tokenService.find(token, 'reset-password');
 
-	if (!tokenDoc) { throw new Error('The request has expired. Please try again.'); }
+	if (!tokenDoc) {
+		return next(new Error('The request has expired. Please try again.'));
+	}
 
 	const user = await UserModel.findById(tokenDoc.userId);
 
-	if (!user) { throw new Error('User not found'); }
+	if (!user) {
+		return next(new Error('User not found'));
+	}
 
 	user.password = password;
 	user.isVerified = true;
 
 	await UserModel.saveUpdatedUser(user);
+
+	return res.status(200).json({ message: 'success' });
 }
 
 async function getAll() {

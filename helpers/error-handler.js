@@ -1,6 +1,15 @@
 function errorHandler(err, req, res, next) { // eslint-disable-line
-	console.log('===> ERROR HANDLER - name: ', err.name); // eslint-disable-line
-	console.log('===> ERROR HANDLER - message: ', err.message); // eslint-disable-line
+	console.log('===> ERROR HANDLER: ', err.name + ' - ' + err.message); // eslint-disable-line
+
+	// if (!err.statusCode) { err.statusCode = 500; } // eslint-disable-line
+
+	// Example if we want to do something specific by checking
+	// a property that we added when creating the error object.
+	// if (err.shouldRedirect) {
+	// 	return res.render('myErrorPage'); // Example
+	// }
+
+	// return res.status(err.statusCode).send(err.message);
 
 	if (typeof (err) === 'string') {
 		// custom application error
@@ -13,7 +22,7 @@ function errorHandler(err, req, res, next) { // eslint-disable-line
 	}
 
 	if (err.name === 'TypeError') {
-		// mongoose validation error
+		// Type error
 		return res.status(400).json({ message: err.message });
 	}
 
