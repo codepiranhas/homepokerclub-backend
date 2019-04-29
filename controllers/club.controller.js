@@ -53,15 +53,20 @@ async function addMember(req, res, next) {
 		// Add the new member to the club with status "pending"
 		const updatedClub = await ClubModel.addMember(currentClubId, memberParam);
 		// Create a notification for the member
-		await notificationService.create({
-			type: 'club-invitation',
-			message: `${inviter.name} has invited you to join the club ${updatedClub.name}`,
-			senderId: currentUserId,
-			receiverId: memberParam.userId,
-			body: {
-				clubId: updatedClub._id,
-			},
-		});
+		try {
+			await notificationService.create({
+				type: 'club-invitation',
+				message: `${inviter.name} has invited you to join the club ${updatedClub.name}`,
+				senderId: currentUserId,
+				receiverId: memberParam.userId,
+				body: {
+					clubId: updatedClub._id,
+				},
+			});
+		} catch (error) {
+			return next(errorService.err(400, error));
+		}
+
 		// Send an email to the member
 		await mailService.sendClubInvitation(inviter, invitee, updatedClub);
 
