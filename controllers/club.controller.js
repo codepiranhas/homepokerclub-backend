@@ -1,11 +1,8 @@
-// const crypto = require('crypto');
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
-// const config = require('../config/keys');
 const db = require('../helpers/db');
 const mailService = require('../services/mail.service');
 const notificationService = require('../services/notification.service');
-// const tokenService = require('services/token.service');
+const errorService = require('../services/error.service');
+
 const ClubModel = db.Club;
 const UserModel = db.User;
 
@@ -21,11 +18,7 @@ async function create(req, res, next) {
 	const currentUserId = req.user.sub;
 
 	if (!clubParam || !clubParam.name || !currentUserId) {
-		// const err = new Error('Invalid parameters');
-		// err.statusCode = 407;
-		// err.shouldRedirect = true;
-		// return next(err);
-		return next(new Error('Invalid parameters @ create @ club.controller'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	const savedClub = await ClubModel.create(clubParam, currentUserId);
@@ -40,7 +33,7 @@ async function addMember(req, res, next) {
 	const currentClubId = req.params.id;
 
 	if (!memberParam || !memberParam.userId || !currentUserId || !currentClubId) {
-		return next(new Error('Invalid parameters'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	const promises = [
@@ -54,7 +47,7 @@ async function addMember(req, res, next) {
 	if (inviter && invitee && club) {
 		// Check if the invitee is already in the club
 		if (club.members.some(member => member.userId.toString() === memberParam.userId)) {
-			return next(new Error('User already in the club or invitation pending'));
+			return next(errorService.err(400, 'This member is already in the club or has a pending invitation.'));
 		}
 
 		// Add the new member to the club with status "pending"
@@ -75,7 +68,7 @@ async function addMember(req, res, next) {
 		return res.status(200).json({ club: updatedClub });
 	}
 
-	return next(new Error('No inviter and/or invitee and/or club found @ addMember @ club.controller'));
+	return next(errorService.err(400, 'No inviter or invitee found.'));
 }
 
 async function acceptInvitation(req, res, next) {
@@ -83,18 +76,18 @@ async function acceptInvitation(req, res, next) {
 	const currentClubId = req.params.id;
 
 	if (!currentUserId || !currentClubId) {
-		return next(new Error('Invalid parameters'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	const club = await ClubModel.findById(currentClubId);
 	const pendingMember = club.members.find(member => member.userId.toString() === currentUserId);
 
 	if (!pendingMember) {
-		return next(new Error('Pending member not found'));
+		return next(errorService.err(400, 'Pending member not found.'));
 	}
 
 	if (pendingMember.status !== 'pending') {
-		return next(new Error('Already joined'));
+		return next(errorService.err(400, 'This member has already joined the club.'));
 	}
 
 	const updatedUser = await UserModel.addClub(currentUserId, currentClubId);

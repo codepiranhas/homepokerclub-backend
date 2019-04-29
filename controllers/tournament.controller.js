@@ -1,18 +1,13 @@
-// const crypto = require('crypto');
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
-// const config = require('../config/keys');
-
+const errorService = require('../services/error.service');
 const db = require('../helpers/db');
-// const mailService = require('services/mail.service');
-// const tokenService = require('services/token.service');
+
 const TournamentModel = db.Tournament;
 
 async function create(req, res, next) {
 	const tournamentParam = req.body;
 
 	if (!tournamentParam || !tournamentParam.name || !tournamentParam.clubId) {
-		return next(Error('Invalid parameters'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	const savedTournament = await TournamentModel.create(tournamentParam);
@@ -24,7 +19,7 @@ async function deleteTournament(req, res, next) {
 	const tournamentId = req.params.id;
 
 	if (!tournamentId) {
-		return next(Error('Invalid parameters'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	await TournamentModel.deleteById(tournamentId);

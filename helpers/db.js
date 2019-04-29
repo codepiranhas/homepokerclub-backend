@@ -8,7 +8,7 @@ const tournamentModel = require('../models/tournament.model');
 const notificationModel = require('../models/notification.model');
 
 mongoose.connect(process.env.MONGODB_URI
-	|| config.mongoURI, { useCreateIndex: true, useNewUrlParser: true, useFindAndModify: false })
+|| config.mongoURI, { useCreateIndex: true, useNewUrlParser: true, useFindAndModify: false })
 	.then(() => {
 			console.log('Connected to DB'); // eslint-disable-line
 	})
