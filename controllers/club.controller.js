@@ -55,7 +55,7 @@ async function addMember(req, res, next) {
 		// Create a notification for the member
 		try {
 			await notificationService.create({
-				type: false,
+				type: 'club-invitation',
 				message: `${inviter.name} has invited you to join the club ${updatedClub.name}`,
 				senderId: currentUserId,
 				receiverId: memberParam.userId,
