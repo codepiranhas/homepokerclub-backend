@@ -4,6 +4,7 @@ const config = require('../config/keys');
 const db = require('../helpers/db');
 const mailService = require('../services/mail.service');
 const tokenService = require('../services/token.service');
+const errorService = require('../services/error.service');
 
 const UserModel = db.User;
 
@@ -11,11 +12,11 @@ async function register(req, res, next) {
 	const userParam = req.body;
 
 	if (!userParam || !userParam.email || !userParam.password) {
-		return next(new Error('Invalid parameters'));
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
 	if (await UserModel.findByEmail(userParam.email)) {
-		return next(new Error('Email already exists.'));
+		return next(errorService.err(400, 'Email already exists.'));
 	}
 
 	const savedUser = await UserModel.create(userParam);
@@ -33,7 +34,7 @@ async function authenticate(req, res, next) {
 
 	if (user && bcrypt.compareSync(userParam.password, user.password)) {
 		if (!user.isVerified) {
-			return next(new Error('Please verify your account first.'));
+			return next(errorService.err(400, 'Account not verified.'));
 		}
 		const { password, ...userWithoutPassword } = user.toObject();
 		const token = jwt.sign({ sub: user._id }, config.secretJWT);
@@ -41,14 +42,14 @@ async function authenticate(req, res, next) {
 		return res.status(200).json({ ...userWithoutPassword, token });
 	}
 
-	return next(new Error('Email or password is incorrect.'));
+	return next(errorService.err(400, 'Email or password is incorrect'));
 }
 
 async function forgotPassword(req, res, next) {
 	const {	email } = req.body;
 
 	if (!email) {
-		return next(new Error('Invalid parameters.'));
+		return next(errorService.err(400, 'Invalid parameters'));
 	}
 	const user = await UserModel.findByEmail(email);
 
@@ -67,7 +68,7 @@ async function validateResetPasswordToken(req, res, next) {
 		return res.status(200).json({ message: 'success' });
 	}
 
-	return next(new Error('The request has expired. Please try again.'));
+	return next(errorService.err(400, 'Token expired. Please try again.'));
 }
 
 async function confirmNewUser(req, res, next) {
@@ -80,7 +81,7 @@ async function confirmNewUser(req, res, next) {
 		return res.status(200).json(updatedUser);
 	}
 
-	return next(new Error('Token not found'));
+	return next(errorService.err(400, 'Token not found.'));
 }
 
 async function resetPassword(req, res, next) {
@@ -89,13 +90,13 @@ async function resetPassword(req, res, next) {
 	const tokenDoc = await tokenService.find(token, 'reset-password');
 
 	if (!tokenDoc) {
-		return next(new Error('The request has expired. Please try again.'));
+		return next(errorService.err(400, 'The request has expired. Please try again.'));
 	}
 
 	const user = await UserModel.findById(tokenDoc.userId);
 
 	if (!user) {
-		return next(new Error('User not found'));
+		return next(errorService.err(400, 'User not found.'));
 	}
 
 	user.password = password;
@@ -118,14 +119,19 @@ async function getById(id) {
 	return user;
 }
 
-async function update(id, userParam) {
+async function update(req, res, next) {
+	const { id } = req.params.id;
+	const userParam = req.body;
 	const user = await UserModel.findById(id);
 
 	// validate
-	if (!user) { throw new Error('User not found'); }
+	if (!user) {
+		return next(errorService.err(400, 'User not found.'));
+	}
+
 	if (user.username !== userParam.username
-		&& await UserModel.findOne({ username: userParam.username })) {
-		throw new Error(`Username ${userParam.username} is already taken`);
+	&& await UserModel.findOne({ username: userParam.username })) {
+		return next(errorService.err(400, `Username ${userParam.username} is already taken`));
 	}
 
 	// hash password if it was entered
@@ -136,7 +142,10 @@ async function update(id, userParam) {
 		Object.assign(user, userParam);
 
 		await user.save();
+
+		return res.status(200).json({ message: 'success' });
 	}
+	return res.status(200).json({ message: 'success' });
 }
 
 async function deleteUser(userId) {

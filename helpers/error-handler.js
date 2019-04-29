@@ -11,33 +11,28 @@ function errorHandler(err, req, res, next) { // eslint-disable-line
 
 	// return res.status(err.statusCode).send(err.message);
 
-	if (typeof (err) === 'string') {
-		// custom application error
-		return res.status(400).json({ message: err });
-	}
-
-	if (err.name === 'Error') {
-		// custom application error
-		return res.status(400).json({ message: err.message });
-	}
-
 	if (err.name === 'TypeError') {
 		// Type error
-		return res.status(400).json({ message: err.message });
+		return res.status(400).json({ message: err.message, type: 'typeError' });
 	}
 
 	if (err.name === 'ValidationError') {
 		// mongoose validation error
-		return res.status(400).json({ message: err.message });
+		return res.status(400).json({ message: err.message, type: 'validationError' });
 	}
 
 	if (err.name === 'UnauthorizedError') {
 		// jwt authentication error
-		return res.status(401).json({ message: 'Invalid Token' });
+		return res.status(401).json({ message: 'Invalid Token', type: 'unauthorizedError' });
 	}
 
-	// default to 500 server error
-	return res.status(500).json({ message: err.message });
+	if (err.statusCode) {
+		// custom application error
+		return res.status(err.statusCode).json({ message: err.message, type: 'applicationError' });
+	}
+
+	// Internal system error
+	return res.status(500).json({ message: err.message, type: 'internalError' });
 }
 
 module.exports = errorHandler;
