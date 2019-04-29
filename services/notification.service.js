@@ -1,12 +1,6 @@
-// const crypto = require('crypto');
-// const jwt = require('jsonwebtoken');
-// const bcrypt = require('bcryptjs');
-// const config = require('../config/keys');
 const db = require('../helpers/db');
-// const mailService = require('services/mail.service');
-// const tokenService = require('services/token.service');
+
 const NotificationModel = db.Notification;
-// const ClubModel = db.Club;
 const UserModel = db.User;
 
 async function create(notificationParam) {

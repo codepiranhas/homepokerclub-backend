@@ -1,7 +1,7 @@
 ﻿const express = require('express');
 const cors = require('cors');
 const jwt = require('./helpers/jwt');
-const errorHandler = require('./helpers/error-handler');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
