@@ -9,6 +9,7 @@ const schema = new Schema({
 	name: { type: String },
 
 	clubs: [{ type: Schema.Types.ObjectId, ref: 'Club' }],
+	lastViewedClub: { type: Schema.Types.ObjectId, ref: 'Club' },
 
 	isVerified: { type: Boolean, default: false },
 	isFirstLogin: { type: Boolean, default: true },
@@ -78,7 +79,7 @@ module.exports = {
 
 	findById: async _id => User.findOne({ _id }),
 
-	findByEmail: email => User.findOne({ email }),
+	findByEmail: email => User.findOne({ email }).populate('clubs'),
 
 	deleteById: _id => User.deleteOne({ _id }),
 

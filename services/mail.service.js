@@ -4,6 +4,8 @@ const tokenService = require('../services/token.service');
 
 const resetPasswordTemplate = require('../templates/resetPassword.template');
 const verifyAccountTemplate = require('../templates/verifyAccount.template');
+// const inviteToClubNewUserTemplate = require('../templates/inviteToClub-newUser');
+const inviteToClubExistingUserTemplate = require('../templates/inviteToClub-existingUser');
 
 sgMail.setApiKey(config.sendgridApiKey);
 
@@ -37,8 +39,8 @@ exports.sendResetPassword = async (user) => {
 	return sgMail.send(msg);
 };
 
-exports.sendClubInvitation = async (inviter, invitee, club) => {
-	const emailTemplate = resetPasswordTemplate.html(config.frontendUrl, '12345');
+exports.sendClubInvitation = async (inviter, invitee, club, token) => {
+	const emailTemplate = inviteToClubExistingUserTemplate.html(config.backendUrl, 'club-invite', token);
 
 	const msg = {
 		to: invitee.email,

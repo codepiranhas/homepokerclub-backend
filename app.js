@@ -15,6 +15,7 @@ app.use(jwt());
 app.use('/v1/users', require('./routes/user.routes'));
 app.use('/v1/clubs', require('./routes/club.routes'));
 app.use('/v1/tournaments', require('./routes/tournament.routes'));
+app.use('/v1/notifications', require('./routes/notification.routes'));
 
 app.get('/v1/status', (req, res) => res.send("It's alive!"));
 

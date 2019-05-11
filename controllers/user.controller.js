@@ -7,6 +7,7 @@ const tokenService = require('../services/token.service');
 const errorService = require('../services/error.service');
 
 const UserModel = db.User;
+const ClubModel = db.Club;
 
 async function register(req, res, next) {
 	const userParam = req.body;
@@ -77,8 +78,22 @@ async function confirmNewUser(req, res, next) {
 	const tokenDoc = await tokenService.find(token, 'new-user');
 
 	if (tokenDoc) {
-		const updatedUser = await UserModel.updateUserToVerified(tokenDoc.userId);
-		return res.status(200).json(updatedUser);
+		// Initialize the user by creating a club for him
+		const clubObj = {
+			name: 'My awesome club',
+			ownerId: tokenDoc.userId,
+		};
+
+		// Create the club
+		const club = await ClubModel.create(clubObj, tokenDoc.userId);
+
+		// Add the club to the user and update him to verified
+		await UserModel.updateOne(
+			{ _id: tokenDoc.userId },
+			{ clubs: [club._id], isVerified: true },
+		);
+
+		return res.redirect(config.frontendUrl);
 	}
 
 	return next(errorService.err(400, 'Token not found.'));

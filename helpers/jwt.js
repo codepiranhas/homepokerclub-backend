@@ -25,7 +25,9 @@ function jwt() {
 			/^\/v1\/users\/forgotPassword/,
 			/^\/v1\/users\/resetPassword/,
 			/^\/v1\/users\/validateResetPasswordToken\/.*/,
-			/^\/users\/confirmNewUser\/.*/,
+			/^\/v1\/users\/confirmNewUser\/.*/,
+
+			/^\/v1\/notifications\/resolve\/.*\/.*\/.*/,
 		],
 	});
 }

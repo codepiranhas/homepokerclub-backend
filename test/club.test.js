@@ -84,84 +84,84 @@ describe('##### /CLUB TESTS #####', function () {
 		});
 	});
 
-	describe('Add member to club - no userId', function () {
-		let clubObj;
+	// describe('Add member to club - no userId', function () {
+	// 	let clubObj;
 
-		before(async function () {
-			clubObj = await utils.club.create({ ownerId: currentUser._id });
-		});
+	// 	before(async function () {
+	// 		clubObj = await utils.club.create({ ownerId: currentUser._id });
+	// 	});
 
-		after(async function () {
-			await utils.club.deleteClub(clubObj);
-		});
+	// 	after(async function () {
+	// 		await utils.club.deleteClub(clubObj);
+	// 	});
 
-		it('should return a status 400', function (done) {
-			request(app)
-				.post(`/v1/clubs/${clubObj._id}/addMember`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${currentUser.token}`)
-				.send({ userId: null })
-				.end((err, res) => {
-					expect(res.statusCode).to.equal(400);
-					done();
-				});
-		});
-	});
+	// 	it('should return a status 400', function (done) {
+	// 		request(app)
+	// 			.post(`/v1/clubs/${clubObj._id}/addMember`)
+	// 			.set('Accept', 'application/json')
+	// 			.set('Authorization', `Bearer ${currentUser.token}`)
+	// 			.send({ userId: null })
+	// 			.end((err, res) => {
+	// 				expect(res.statusCode).to.equal(400);
+	// 				done();
+	// 			});
+	// 	});
+	// });
 
-	describe('Add member to club - already joined', function () {
-		let clubObj;
-		let userObj;
+	// describe('Add member to club - already joined', function () {
+	// 	let clubObj;
+	// 	let userObj;
 
-		before(async function () {
-			clubObj = await utils.club.create({ ownerId: currentUser._id });
-			userObj = await utils.user.create();
+	// 	before(async function () {
+	// 		clubObj = await utils.club.create({ ownerId: currentUser._id });
+	// 		userObj = await utils.user.create();
 
-			await utils.club.addMember(userObj, clubObj);
-		});
+	// 		await utils.club.addMember(userObj, clubObj);
+	// 	});
 
-		after(async function () {
-			// TODO: Run them at the same time
-			await utils.club.deleteClub(clubObj);
-			await utils.user.deleteUser(userObj);
-		});
+	// 	after(async function () {
+	// 		// TODO: Run them at the same time
+	// 		await utils.club.deleteClub(clubObj);
+	// 		await utils.user.deleteUser(userObj);
+	// 	});
 
-		it('should return a status 400', function (done) {
-			request(app)
-				.post(`/v1/clubs/${clubObj._id}/addMember`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${currentUser.token}`)
-				.send({ userId: userObj._id })
-				.end(function (err, res) {
-					expect(res.statusCode).to.equal(400);
-					done();
-				});
-		});
-	});
+	// 	it('should return a status 400', function (done) {
+	// 		request(app)
+	// 			.post(`/v1/clubs/${clubObj._id}/addMember`)
+	// 			.set('Accept', 'application/json')
+	// 			.set('Authorization', `Bearer ${currentUser.token}`)
+	// 			.send({ userId: userObj._id })
+	// 			.end(function (err, res) {
+	// 				expect(res.statusCode).to.equal(400);
+	// 				done();
+	// 			});
+	// 	});
+	// });
 
-	describe('Add member to club successfully', function () {
-		let userObj;
-		let clubObj;
+// 	describe('Add member to club successfully', function () {
+// 		let userObj;
+// 		let clubObj;
 
-		before(async function () {
-			userObj = await utils.user.create();
-			clubObj = await utils.club.create({ ownerId: currentUser._id });
-		});
+// 		before(async function () {
+// 			userObj = await utils.user.create();
+// 			clubObj = await utils.club.create({ ownerId: currentUser._id });
+// 		});
 
-		after(async function () {
-			await utils.club.deleteClub(clubObj);
-			await utils.user.deleteUser(userObj);
-		});
+// 		after(async function () {
+// 			await utils.club.deleteClub(clubObj);
+// 			await utils.user.deleteUser(userObj);
+// 		});
 
-		it('should return a status 200', function (done) {
-			request(app)
-				.post(`/v1/clubs/${clubObj._id}/addMember`)
-				.set('Accept', 'application/json')
-				.set('Authorization', `Bearer ${currentUser.token}`)
-				.send({ userId: userObj._id })
-				.end(function (err, res) {
-					expect(res.statusCode).to.equal(200);
-					done();
-				});
-		});
-	});
+// 		it('should return a status 200', function (done) {
+// 			request(app)
+// 				.post(`/v1/clubs/${clubObj._id}/addMember`)
+// 				.set('Accept', 'application/json')
+// 				.set('Authorization', `Bearer ${currentUser.token}`)
+// 				.send({ userId: userObj._id })
+// 				.end(function (err, res) {
+// 					expect(res.statusCode).to.equal(200);
+// 					done();
+// 				});
+// 		});
+// 	});
 });

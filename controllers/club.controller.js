@@ -1,6 +1,6 @@
 const db = require('../helpers/db');
-const mailService = require('../services/mail.service');
-const notificationService = require('../services/notification.service');
+// const mailService = require('../services/mail.service');
+// const notificationService = require('../services/notification.service');
 const errorService = require('../services/error.service');
 
 const ClubModel = db.Club;
@@ -28,52 +28,44 @@ async function create(req, res, next) {
 }
 
 async function addMember(req, res, next) {
-	const memberParam = req.body;
-	const currentUserId = req.user.sub;
+	const newMember = req.body;
 	const currentClubId = req.params.id;
 
-	if (!memberParam || !memberParam.userId || !currentUserId || !currentClubId) {
+	if (!newMember || !newMember.name || !currentClubId) {
 		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
-	const promises = [
-		UserModel.findById(currentUserId),
-		UserModel.findById(memberParam.userId),
-		ClubModel.findById(currentClubId),
-	];
+	const updatedClub = await ClubModel.addMember(currentClubId, newMember);
 
-	const [inviter, invitee, club] = await Promise.all(promises);
+	return res.status(200).json({ message: 'success', club: updatedClub });
+}
 
-	if (inviter && invitee && club) {
-		// Check if the invitee is already in the club
-		if (club.members.some(member => member.userId.toString() === memberParam.userId)) {
-			return next(errorService.err(400, 'This member is already in the club or has a pending invitation.'));
-		}
+async function updateMember(req, res, next) {
+	const member = req.body;
+	const { memberId } = req.params;
+	const currentClubId = req.params.id;
 
-		// Add the new member to the club with status "pending"
-		const updatedClub = await ClubModel.addMember(currentClubId, memberParam);
-		// Create a notification for the member
-		try {
-			await notificationService.create({
-				type: 'club-invitation',
-				message: `${inviter.name} has invited you to join the club ${updatedClub.name}`,
-				senderId: currentUserId,
-				receiverId: memberParam.userId,
-				body: {
-					clubId: updatedClub._id,
-				},
-			});
-		} catch (error) {
-			return next(errorService.err(400, error));
-		}
-
-		// Send an email to the member
-		await mailService.sendClubInvitation(inviter, invitee, updatedClub);
-
-		return res.status(200).json({ club: updatedClub });
+	if (!member || !memberId || !member.name || !currentClubId) {
+		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
-	return next(errorService.err(400, 'No inviter or invitee found.'));
+	const updatedClub = await ClubModel.updateMemberDetails({ _id: currentClubId, memberId }, member);
+
+
+	return res.status(200).json({ message: 'success', club: updatedClub });
+}
+
+async function removeMember(req, res, next) {
+	const currentClubId = req.params.id;
+	const { memberId } = req.params;
+
+	if (!memberId || !currentClubId) {
+		return next(errorService.err(400, 'Invalid parameters.'));
+	}
+
+	const updatedClub = await ClubModel.removeMember(currentClubId, memberId);
+
+	return res.status(200).json({ message: 'success', club: updatedClub });
 }
 
 async function acceptInvitation(req, res, next) {
@@ -105,5 +97,82 @@ module.exports = {
 	create,
 	deleteClub,
 	addMember,
+	updateMember,
+	removeMember,
 	acceptInvitation,
 };
+
+/**
+ * Kept for the coolness of it. (and to have notifications creation example)
+ */
+// async function addMember(req, res, next) {
+// 	const newMember = req.body;
+// 	const currentUserId = req.user.sub;
+// 	const currentClubId = req.params.id;
+
+// 	if (!newMember || !newMember.email || !currentUserId || !currentClubId) {
+// 		console.log({ newMember });
+// 		console.log({ currentUserId });
+// 		console.log({ currentClubId });
+// 		return next(errorService.err(400, 'Invalid parameters.'));
+// 	}
+
+// 	const promises = [
+// 		UserModel.findById(currentUserId), // User that started the invitation
+// 		UserModel.findByEmail(newMember.email), // User that is about to join
+// 		ClubModel.findById(currentClubId), // Current club
+// 	];
+
+// 	const [inviter, invitee, club] = await Promise.all(promises);
+
+// 	if (!inviter || !club) {
+// 		return next(errorService.err(400, 'The inviter and/or club were not found.'));
+// 	}
+
+// 	if (!invitee) {
+// 		console.log('User has no account in app');
+// 		// User does not have an account in the app
+// 		// Create invitation
+// 		try {
+// 			const notification = await notificationService.create({
+// 				type: 'club-invitation-new-user',
+// 				message: `${inviter.name} has invited you to join the club ${club.name}`,
+// 				senderId: currentUserId,
+// 				receiverEmail: newMember.email,
+// 				body: {
+// 					clubId: club._id,
+// 				},
+// 			});
+// 			// Send email
+// 			await mailService.sendClubInvitation(inviter, invitee, club, notification.token);
+// 		} catch (error) {
+// 			return next(errorService.err(400, error));
+// 		}
+// 	} else {
+// 		console.log('User exists in the app');
+// 		const isAlreadyInClub = club.members.some(member => member.userId.toString() === invitee._id.toString()); // eslint-disable-line
+// 		if (!isAlreadyInClub) {
+// 			console.log('User already in the club');
+// 			return next(errorService.err(400, 'This member is already in the club or has a pending invitation.'));
+// 		}
+// 		// User exists in app, but on in club
+// 		// Create invitation
+// 		try {
+// 			const notification = await notificationService.create({
+// 				type: 'club-invitation-existing-user',
+// 				message: `${inviter.name} has invited you to join the club ${club.name}`,
+// 				senderId: currentUserId,
+// 				receiverEmail: newMember.email,
+// 				body: {
+// 					clubId: club._id,
+// 				},
+// 			});
+// 			// Send an email to join the app and club
+// 			await mailService.sendClubInvitation(inviter, invitee, club, notification.token);
+// 		} catch (error) {
+// 			return next(errorService.err(400, error));
+// 		}
+// 	}
+
+// 	return res.status(200).json({ message: 'success' });
+// }

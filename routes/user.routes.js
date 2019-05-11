@@ -1,6 +1,5 @@
 const express = require('express');
 const userController = require('../controllers/user.controller');
-// const config = require('../config/keys');
 
 const router = express.Router();
 

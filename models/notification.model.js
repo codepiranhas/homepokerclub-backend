@@ -3,13 +3,15 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const schema = new Schema({
-	type: { type: String }, // club-invite, club-member-joined, club-member-left, tournament-invite, 
+	token: { type: String },
+	type: { type: String }, // club-invite, club-member-joined, club-member-left, tournament-invite,
 	message: { type: String },
 
 	body: {},
 
 	senderId: { type: Schema.Types.ObjectId, ref: 'User' },
 	receiverId: { type: Schema.Types.ObjectId, ref: 'User' },
+	receiverEmail: { type: String },
 
 	isViewed: { type: Boolean, default: false },
 
@@ -31,6 +33,8 @@ module.exports = {
 	},
 
 	findById: _id => Notification.findOne({ _id }),
+
+	findByToken: token => Notification.findOne({ token }),
 
 	deleteById: _id => Notification.deleteOne({ _id }),
 
