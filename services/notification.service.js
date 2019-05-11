@@ -1,24 +1,31 @@
+const crypto = require('crypto');
 const db = require('../helpers/db');
 
 const NotificationModel = db.Notification;
 const UserModel = db.User;
 
+function generateToken() {
+	return crypto.randomBytes(16).toString('hex');
+}
+
 async function create(notificationParam) {
 	if (!notificationParam
 		|| !notificationParam.type
-		|| !notificationParam.receiverId
+		|| (!notificationParam.receiverId && !notificationParam.receiverEmail)
 		|| !notificationParam.message) {
-		throw new Error('Invalid parameters');
+		throw new Error('Invalid parameters @ notification.service');
 	}
 
-	const savedNotification = await NotificationModel.create(notificationParam);
+	const notificationToSave = { ...notificationParam, token: generateToken() };
 
-	return { notification: savedNotification };
+	const savedNotification = await NotificationModel.create(notificationToSave);
+
+	return savedNotification;
 }
 
 async function view(params) {
 	if (!params.currentUserId || params.invitationId) {
-		throw new Error('Invalid parameters');
+		throw new Error('Invalid parameters @ notification.service');
 	}
 
 	const invitation = await NotificationModel.findById(params.invitationId);
@@ -29,10 +36,10 @@ async function view(params) {
 
 		NotificationModel.updateOne({ _id: invitation }, { resolvedTo: 'accepted', resolvedAt: Date.now });
 
-		return { user: updatedUser };
+		return updatedUser;
 	}
 
-	throw new Error('Invalid parameters');
+	throw new Error('Invalid parameters @ notification.service');
 }
 
 async function deleteNotification(notificationId) {

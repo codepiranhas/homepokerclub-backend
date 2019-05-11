@@ -8,8 +8,10 @@ const schema = new Schema({
 	ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
 
 	members: [{
-		userId: { type: Schema.Types.ObjectId, ref: 'User' },
-		status: { type: String }, // accepted, pending
+		// userId: { type: Schema.Types.ObjectId, ref: 'User' },
+		status: { type: String }, // active, pending
+		name: { type: String },
+		email: { type: String },
 		level: { type: String }, // member, admin
 		joinedAt: { type: Date, default: Date.now },
 	}],
@@ -24,27 +26,23 @@ const Club = mongoose.model('Club', schema);
 
 // METHODS
 module.exports = {
-	create: (obj, userId) => {
+	create: (obj) => {
 		const clubDoc = new Club(obj);
-
-		clubDoc.ownerId = new mongoose.Types.ObjectId(userId);
-		clubDoc.members = [{
-			userId: new mongoose.Types.ObjectId(userId),
-			status: 'accepted',
-			level: 'owner',
-		}];
 
 		return clubDoc.save();
 	},
 
 	findById: _id => Club.findOne({ _id }),
 
+	findByIds: ids => Club.find({ _id: { $in: ids } }),
+
 	deleteById: _id => Club.deleteOne({ _id }),
 
 	addMember: (_id, member) => {
 		const memberDoc = {
-			userId: mongoose.Types.ObjectId(member.userId),
-			status: member.status || 'pending',
+			name: member.name,
+			email: member.email || undefined,
+			status: member.status || 'active',
 			level: member.level || 'member',
 		};
 
@@ -59,24 +57,29 @@ module.exports = {
 		);
 	},
 
-	updateMemberStatus: (query, args) => Club.findOneAndUpdate(
-		{ _id: query._id, 'members.userId': query.userId },
+	removeMember: (_id, memberId) => Club.findOneAndUpdate(
+		{ _id },
 		{
-			$set: {
-				'members.$.status': args.status,
+			$pull: {
+				members: { _id: memberId },
 			},
 		},
 		{ new: true },
 	),
 
-	updateMemberLevel: (query, args) => Club.findOneAndUpdate(
-		{ _id: query._id, 'members.userId': query.userId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
+	updateMemberDetails: (query, args) => Club.findOneAndUpdate(
+		{ _id: query._id, 'members._id': query.memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
 		{
 			$set: {
-				'members.$.level': args.level,
+				'members.$.name': args.name,
+				'members.$.email': args.email,
 			},
 		},
 		{ new: true },
+	),
+
+	findMember: query => Club.findOne(
+		{ _id: query._id, 'members._id': query.memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
 	),
 
 	// METHODS USED FROM TESTING SUITE
