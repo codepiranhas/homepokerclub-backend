@@ -10,6 +10,7 @@ async function getSignedUrl(req, res, next) { // eslint-disable-line
 		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
+	// TODO: Set the image type from the type parameter
 	const key = `avatars/user-${req.user.sub}/${randomGenerators.uuid()}.jpeg`;
 
 	try {
