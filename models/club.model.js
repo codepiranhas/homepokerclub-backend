@@ -8,12 +8,15 @@ const schema = new Schema({
 	ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
 
 	members: [{
-		// userId: { type: Schema.Types.ObjectId, ref: 'User' },
+		name: { type: String, required: true },
 		status: { type: String }, // active, pending
-		name: { type: String },
 		email: { type: String },
 		level: { type: String }, // member, admin
-		joinedAt: { type: Date, default: Date.now },
+		imageUrl: { type: String },
+		isRemoved: { type: Boolean, default: false },
+
+		createdAt: { type: Date, default: Date.now },
+		removedAt: { type: Date },
 	}],
 
 	createdAt: { type: Date, default: Date.now },
@@ -44,6 +47,7 @@ module.exports = {
 			email: member.email || undefined,
 			status: member.status || 'active',
 			level: member.level || 'member',
+			imageUrl: member.imageUrl || undefined,
 		};
 
 		return Club.findOneAndUpdate(
@@ -67,12 +71,24 @@ module.exports = {
 		{ new: true },
 	),
 
+	markMemberAsRemoved: (_id, memberId) => Club.findOneAndUpdate(
+		{ _id, 'members._id': memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
+		{
+			$set: {
+				'members.$.isRemoved': true,
+				'members.$.removedAt': Date.now(),
+			},
+		},
+		{ new: true },
+	),
+
 	updateMemberDetails: (query, args) => Club.findOneAndUpdate(
 		{ _id: query._id, 'members._id': query.memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
 		{
 			$set: {
 				'members.$.name': args.name,
 				'members.$.email': args.email,
+				'members.$.imageUrl': args.imageUrl || undefined,
 			},
 		},
 		{ new: true },

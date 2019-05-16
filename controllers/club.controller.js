@@ -51,7 +51,6 @@ async function updateMember(req, res, next) {
 
 	const updatedClub = await ClubModel.updateMemberDetails({ _id: currentClubId, memberId }, member);
 
-
 	return res.status(200).json({ message: 'success', club: updatedClub });
 }
 
@@ -63,7 +62,7 @@ async function removeMember(req, res, next) {
 		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
-	const updatedClub = await ClubModel.removeMember(currentClubId, memberId);
+	const updatedClub = await ClubModel.markMemberAsRemoved(currentClubId, memberId);
 
 	return res.status(200).json({ message: 'success', club: updatedClub });
 }
