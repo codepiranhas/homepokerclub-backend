@@ -27,6 +27,8 @@ module.exports = {
 
 	findById: _id => Tournament.findOne({ _id }),
 
+	findAllByClubId: clubId => Tournament.find({ clubId }),
+
 	deleteById: _id => Tournament.deleteOne({ _id }),
 
 	// METHODS USED FROM TESTING SUITE
@@ -36,6 +38,5 @@ module.exports = {
 		return tournamentDoc.save();
 	},
 
-	// METHODS USED FROM TESTING SUITE
 	deleteByIdForTest: _id => Tournament.deleteOne({ _id }),
 };

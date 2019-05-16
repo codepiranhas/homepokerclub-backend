@@ -3,6 +3,19 @@ const db = require('../helpers/db');
 
 const TournamentModel = db.Tournament;
 
+async function getAllByClubId(req, res, next) {
+	const { clubId } = req.params;
+
+	if (!clubId) {
+		return next(errorService.err(400, 'Invalid parameters.'));
+	}
+
+	const tournaments = await TournamentModel.findAllByClubId(clubId);
+
+	return res.status(200).json({ tournaments });
+}
+
+
 async function create(req, res, next) {
 	const tournamentParam = req.body;
 
@@ -28,6 +41,7 @@ async function deleteTournament(req, res, next) {
 }
 
 module.exports = {
+	getAllByClubId,
 	create,
 	deleteTournament,
 };
