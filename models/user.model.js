@@ -77,7 +77,7 @@ module.exports = {
 
 	saveUpdatedUser: user => user.save(),
 
-	findById: async _id => User.findOne({ _id }),
+	findById: async _id => User.findOne({ _id }).populate('clubs'),
 
 	findByEmail: email => User.findOne({ email }).populate('clubs'),
 

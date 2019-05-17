@@ -9,6 +9,19 @@ const errorService = require('../services/error.service');
 const UserModel = db.User;
 const ClubModel = db.Club;
 
+async function initializeState(req, res, next) {
+	const { userId } = req.body;
+
+	if (!userId) {
+		return next(errorService.err(400, 'Invalid parameters.'));
+	}
+
+	const user = await UserModel.findById(userId);
+
+	return res.status(200).json({ user });
+}
+
+
 async function register(req, res, next) {
 	const userParam = req.body;
 
@@ -178,4 +191,5 @@ module.exports = {
 	getById,
 	update,
 	deleteUser,
+	initializeState,
 };
