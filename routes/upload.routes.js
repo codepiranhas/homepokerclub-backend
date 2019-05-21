@@ -5,6 +5,6 @@ const router = express.Router();
 
 // routes
 router.post('/getSignedUrl', uploadController.getSignedUrl);
-router.delete('/deleteAvatar', uploadController.deleteAvatar);
+router.delete('/deleteFile', uploadController.deleteFile);
 
 module.exports = router;
