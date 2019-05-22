@@ -3,6 +3,8 @@ module.exports = {
 	sendgridApiKey: process.env.SENDGRID_KEY,
 	mongoURI: process.env.MONGO_URI,
 
+	s3BucketName: 'homepokerclub',
+
 	frontendUrl: 'http://localhost:3000',
 	backendUrl: 'http://localhost:5000',
 };

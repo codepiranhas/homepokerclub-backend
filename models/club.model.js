@@ -7,12 +7,14 @@ const schema = new Schema({
 
 	ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
 
+	logoUrl: { type: String },
+
 	members: [{
 		name: { type: String, required: true },
 		status: { type: String }, // active, pending
 		email: { type: String },
 		level: { type: String }, // member, admin
-		imageUrl: { type: String },
+		avatarUrl: { type: String },
 		isRemoved: { type: Boolean, default: false },
 
 		createdAt: { type: Date, default: Date.now },
@@ -39,6 +41,10 @@ module.exports = {
 
 	findByIds: ids => Club.find({ _id: { $in: ids } }),
 
+	findMember: query => Club.findOne(
+		{ _id: query._id, 'members._id': query.memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
+	),
+
 	deleteById: _id => Club.deleteOne({ _id }),
 
 	addMember: (_id, member) => {
@@ -47,7 +53,7 @@ module.exports = {
 			email: member.email || undefined,
 			status: member.status || 'active',
 			level: member.level || 'member',
-			imageUrl: member.imageUrl || undefined,
+			avatarUrl: member.imageUrl || undefined,
 		};
 
 		return Club.findOneAndUpdate(
@@ -88,14 +94,28 @@ module.exports = {
 			$set: {
 				'members.$.name': args.name,
 				'members.$.email': args.email,
-				'members.$.imageUrl': args.imageUrl || undefined,
+				'members.$.avatarUrl': args.imageUrl || undefined,
 			},
 		},
 		{ new: true },
 	),
 
-	findMember: query => Club.findOne(
-		{ _id: query._id, 'members._id': query.memberId }, // For multiple: members: { $elemMatch: { grade: { $lte: 90 }, mean: { $gt: 80 } } }
+	/**
+	 * Universal update method
+	 * Parameters (args) should be passed as an object
+	 * with correct property names according to the database schema.
+	 * @param query (object)
+	 * @param properties (object)
+	 *
+	 * @example
+	 * updateOne({ _id: XXX, isVerified: false }, { logoUrl: 'abc123', isVerified: true })
+	 */
+	updateOne: (query, args) => Club.findOneAndUpdate(
+		{ ...query },
+		{
+			$set: { ...args },
+		},
+		{ new: true },
 	),
 
 	// METHODS USED FROM TESTING SUITE

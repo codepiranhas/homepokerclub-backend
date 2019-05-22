@@ -3,15 +3,25 @@ const randomGenerators = require('../helpers/randomGenerators');
 const s3Utilities = require('../helpers/s3Utilities');
 const config = require('../config/keys');
 
-async function getSignedUrl(req, res, next) { // eslint-disable-line
-	const { type } = req.body;
+const foldersAllowed = [
+	'member-avatars',
+	'club-logos',
+];
 
-	if (!req.user.sub || !type) {
+async function getSignedUrl(req, res, next) { // eslint-disable-line
+	const { type, folder } = req.body;
+
+	if (!req.user.sub || !type || !folder) {
 		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
-	// TODO: Set the image type from the type parameter
-	const key = `avatars/user-${req.user.sub}/${randomGenerators.uuid()}.jpeg`;
+	// Throw an error if the folder name is not one of the allowed ones
+	if (!foldersAllowed.includes(folder)) {
+		return next(errorService.err(400, 'Unknown folder.'));
+	}
+
+	const fileType = type.split('/')[1];
+	const key = `${folder}/user-${req.user.sub}/${randomGenerators.uuid()}.${fileType}`;
 
 	try {
 		const url = await s3Utilities.getSignedUrl(config.s3BucketName, type, key);
@@ -22,7 +32,7 @@ async function getSignedUrl(req, res, next) { // eslint-disable-line
 	}
 }
 
-async function deleteAvatar(req, res) {
+async function deleteFile(req, res) {
 	const { url } = req.body;
 
 	try {
@@ -36,5 +46,5 @@ async function deleteAvatar(req, res) {
 
 module.exports = {
 	getSignedUrl,
-	deleteAvatar,
+	deleteFile,
 };

@@ -10,6 +10,7 @@ router.post('/:id/addMember', clubController.addMember);
 router.patch('/:id/updateMember/:memberId', clubController.updateMember);
 router.delete('/:id/removeMember/:memberId', clubController.removeMember);
 router.patch('/:id/acceptInvitation', clubController.acceptInvitation);
-// router.patch('/:id/declineInvitation', clubController.declineInvitation);
+router.patch('/:id/updateLogo', clubController.updateLogo);
+router.patch('/:id/updateDetails', clubController.updateDetails);
 
 module.exports = router;
