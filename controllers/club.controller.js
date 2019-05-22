@@ -42,6 +42,19 @@ async function updateLogo(req, res, next) {
 	return res.status(200).json({ message: 'success', club: updatedClub });
 }
 
+async function updateDetails(req, res, next) {
+	const { clubName } = req.body;
+	const currentClubId = req.params.id;
+
+	if (!currentClubId) {
+		return next(errorService.err(400, 'Invalid parameters.'));
+	}
+
+	const updatedClub = await ClubModel.updateOne({ _id: currentClubId }, { name: clubName });
+
+	return res.status(200).json({ message: 'success', club: updatedClub });
+}
+
 async function addMember(req, res, next) {
 	const newMember = req.body;
 	const currentClubId = req.params.id;
@@ -110,6 +123,7 @@ async function acceptInvitation(req, res, next) {
 module.exports = {
 	create,
 	updateLogo,
+	updateDetails,
 	deleteClub,
 	addMember,
 	updateMember,

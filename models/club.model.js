@@ -110,7 +110,7 @@ module.exports = {
 	 * @example
 	 * updateOne({ _id: XXX, isVerified: false }, { logoUrl: 'abc123', isVerified: true })
 	 */
-	updateOne: (query, args) => Club.updateOne(
+	updateOne: (query, args) => Club.findOneAndUpdate(
 		{ ...query },
 		{
 			$set: { ...args },
