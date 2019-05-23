@@ -71,7 +71,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should delete the club and return a status 200', function (done) {
 			request(app)
-				.delete(`/v1/clubs/${clubObj._id}/delete`)
+				.delete(`/v1/clubs/${clubObj._id}`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.end(async function (err, res) {
@@ -97,7 +97,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 400', function (done) {
 			request(app)
-				.post(`/v1/clubs/${clubObj._id}/addMember`)
+				.post(`/v1/clubs/${clubObj._id}/members/create`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ name: null })
@@ -121,7 +121,7 @@ describe('##### /CLUB TESTS #####', function () {
 
 		it('should return a status 200', function (done) {
 			request(app)
-				.post(`/v1/clubs/${clubObj._id}/addMember`)
+				.post(`/v1/clubs/${clubObj._id}/members/create`)
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${currentUser.token}`)
 				.send({ name: 'member__test' })

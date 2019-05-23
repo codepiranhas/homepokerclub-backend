@@ -94,7 +94,7 @@ module.exports = {
 			$set: {
 				'members.$.name': args.name,
 				'members.$.email': args.email,
-				'members.$.avatarUrl': args.imageUrl || undefined,
+				'members.$.avatarUrl': args.avatarUrl || undefined,
 			},
 		},
 		{ new: true },

@@ -6,14 +6,7 @@ const errorService = require('../services/error.service');
 const ClubModel = db.Club;
 const UserModel = db.User;
 
-async function deleteClub(req, res) {
-	const clubId = req.params.id;
-
-	await ClubModel.deleteById(clubId);
-	return res.status(200).json({ message: 'success' });
-}
-
-async function create(req, res, next) {
+async function createClub(req, res, next) {
 	const clubParam = req.body;
 	const currentUserId = req.user.sub;
 
@@ -27,37 +20,37 @@ async function create(req, res, next) {
 	return res.status(200).json({ club: savedClub, user: updatedUser });
 }
 
-async function updateLogo(req, res, next) {
-	const { imageUrl } = req.body;
-	const currentClubId = req.params.id;
+async function getClub(req, res) {
+	const { id: clubId } = req.params;
 
-	if (!currentClubId) {
-		return next(errorService.err(400, 'Invalid parameters.'));
-	}
+	const club = await ClubModel.findById(clubId);
 
-	console.log('@ updateLogo: ', imageUrl);
-
-	const updatedClub = await ClubModel.updateOne({ _id: currentClubId }, { logoUrl: imageUrl });
-
-	return res.status(200).json({ message: 'success', club: updatedClub });
+	return res.status(200).json({ message: 'success', club });
 }
 
-async function updateDetails(req, res, next) {
-	const { clubName } = req.body;
-	const currentClubId = req.params.id;
+async function deleteClub(req, res) {
+	const clubId = req.params.id;
+
+	await ClubModel.deleteById(clubId);
+	return res.status(200).json({ message: 'success' });
+}
+
+async function updateClub(req, res, next) {
+	const { id: currentClubId } = req.params;
+	const club = req.body;
 
 	if (!currentClubId) {
 		return next(errorService.err(400, 'Invalid parameters.'));
 	}
 
-	const updatedClub = await ClubModel.updateOne({ _id: currentClubId }, { name: clubName });
+	const updatedClub = await ClubModel.updateOne({ _id: currentClubId }, club);
 
 	return res.status(200).json({ message: 'success', club: updatedClub });
 }
 
 async function addMember(req, res, next) {
-	const newMember = req.body;
 	const currentClubId = req.params.id;
+	const newMember = req.body;
 
 	if (!newMember || !newMember.name || !currentClubId) {
 		return next(errorService.err(400, 'Invalid parameters.'));
@@ -69,9 +62,8 @@ async function addMember(req, res, next) {
 }
 
 async function updateMember(req, res, next) {
+	const { id: currentClubId, memberId } = req.params;
 	const member = req.body;
-	const { memberId } = req.params;
-	const currentClubId = req.params.id;
 
 	if (!member || !memberId || !member.name || !currentClubId) {
 		return next(errorService.err(400, 'Invalid parameters.'));
@@ -83,8 +75,7 @@ async function updateMember(req, res, next) {
 }
 
 async function removeMember(req, res, next) {
-	const currentClubId = req.params.id;
-	const { memberId } = req.params;
+	const { id: currentClubId, memberId } = req.params;
 
 	if (!memberId || !currentClubId) {
 		return next(errorService.err(400, 'Invalid parameters.'));
@@ -95,40 +86,14 @@ async function removeMember(req, res, next) {
 	return res.status(200).json({ message: 'success', club: updatedClub });
 }
 
-async function acceptInvitation(req, res, next) {
-	const currentUserId = req.user.sub;
-	const currentClubId = req.params.id;
-
-	if (!currentUserId || !currentClubId) {
-		return next(errorService.err(400, 'Invalid parameters.'));
-	}
-
-	const club = await ClubModel.findById(currentClubId);
-	const pendingMember = club.members.find(member => member.userId.toString() === currentUserId);
-
-	if (!pendingMember) {
-		return next(errorService.err(400, 'Pending member not found.'));
-	}
-
-	if (pendingMember.status !== 'pending') {
-		return next(errorService.err(400, 'This member has already joined the club.'));
-	}
-
-	const updatedUser = await UserModel.addClub(currentUserId, currentClubId);
-	const updatedClub = await ClubModel.updateMemberStatus({ _id: currentClubId, userId: currentUserId }, { status: 'accepted' });
-
-	return res.status(200).json({ user: updatedUser, club: updatedClub });
-}
-
 module.exports = {
-	create,
-	updateLogo,
-	updateDetails,
+	createClub,
+	getClub,
+	updateClub,
 	deleteClub,
 	addMember,
 	updateMember,
 	removeMember,
-	acceptInvitation,
 };
 
 /**
