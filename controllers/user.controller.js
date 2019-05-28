@@ -135,6 +135,31 @@ async function resetPassword(req, res, next) {
 	return res.status(200).json({ message: 'success' });
 }
 
+async function changePassword(req, res, next) {
+	const { oldPassword, newPassword } = req.body;
+	const currentUserId = req.user.sub;
+
+	if (!currentUserId || !oldPassword || !newPassword || newPassword.length < 6) {
+		return next(errorService.err(400, 'Invalid Parameters'));
+	}
+
+	const user = await UserModel.findById(currentUserId);
+
+	if (!user) {
+		return next(errorService.err(400, 'User not found.'));
+	}
+
+	if (!bcrypt.compareSync(oldPassword, user.password)) {
+		return next(errorService.err(400, 'Wrong old password'));
+	}
+
+	user.password = newPassword;
+
+	await UserModel.saveUpdatedUser(user);
+
+	return res.status(200).json({ message: 'success' });
+}
+
 async function getAll() {
 	const user = await UserModel.find().select('-hash');
 
@@ -187,6 +212,7 @@ module.exports = {
 	forgotPassword,
 	validateResetPasswordToken,
 	resetPassword,
+	changePassword,
 	getAll,
 	getById,
 	update,

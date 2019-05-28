@@ -10,6 +10,8 @@ router.get('/confirmNewUser/:token', userController.confirmNewUser);
 router.post('/forgotPassword', userController.forgotPassword);
 router.get('/validateResetPasswordToken/:token', userController.validateResetPasswordToken);
 router.post('/resetPassword', userController.resetPassword);
+router.post('/changePassword', userController.changePassword);
+
 router.post('/initializeState', userController.initializeState);
 
 module.exports = router;
