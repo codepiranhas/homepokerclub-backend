@@ -59,7 +59,16 @@ describe('##### /TOURNAMENT TESTS #####', function () {
 				.post('/v1/tournaments/create')
 				.set('Accept', 'application/json')
 				.set('Authorization', `Bearer ${testCurrentUser.token}`)
-				.send({ name: 'testtournament__created', clubId: testClub._id })
+				.send({
+					name: 'testtournament__created',
+					clubId: testClub._id,
+					buyIn: 50,
+					maxPlayers: 9,
+					startingChips: 5000,
+					levelDuration: 15,
+					blinds: { small: 20, big: 40 },
+					payoutOptions: { positions: 3, distribution: 'default' },
+				})
 				.end(function (err, res) {
 					tournamentObj = res.body.tournament;
 
