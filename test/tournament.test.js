@@ -82,7 +82,15 @@ describe('##### /TOURNAMENT TESTS #####', function () {
 		let tournamentObj;
 
 		before(async function () {
-			tournamentObj = await utils.tournament.create({ clubId: testClub._id });
+			tournamentObj = await utils.tournament.create({
+				clubId: testClub._id,
+				buyIn: 50,
+				maxPlayers: 9,
+				startingChips: 5000,
+				levelDuration: 15,
+				blinds: { small: 20, big: 40 },
+				payoutOptions: { positions: 3, distribution: 'default' },
+			});
 		});
 
 		after(async function () {
