@@ -6,5 +6,5 @@ module.exports = {
 	s3BucketName: 'homepokerclub',
 
 	frontendUrl: 'homepokerclub.netlify.com',
-	backendUrl: 'https://homepokerclub-production.herokuapp.com/',
+	backendUrl: 'https://homepokerclub-production.herokuapp.com',
 };
