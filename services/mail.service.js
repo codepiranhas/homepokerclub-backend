@@ -13,6 +13,8 @@ exports.sendVerifyAccount = async (user) => {
 	const token = await tokenService.create(user._id, 'new-user');
 	const emailTemplate = verifyAccountTemplate.html(config.backendUrl, token.token);
 
+	console.log('redirect: ', `${config.backendUrl}/v1/users/confirmNewUser/${token.token}`);
+
 	const msg = {
 		to: user.email,
 		from: 'donotreply@app.com',

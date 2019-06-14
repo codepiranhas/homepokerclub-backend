@@ -88,6 +88,8 @@ async function validateResetPasswordToken(req, res, next) {
 async function confirmNewUser(req, res, next) {
 	const { token } = req.params;
 
+	console.log('token @ comnfirm: ', token);
+
 	const tokenDoc = await tokenService.find(token, 'new-user');
 
 	if (tokenDoc) {

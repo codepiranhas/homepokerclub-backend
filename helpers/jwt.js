@@ -6,7 +6,10 @@ function jwt() {
 	const secret = config.secretJWT;
 
 	async function isRevoked(req, payload, done) {
+		console.log('user: ', payload.sub);
 		const user = await userController.getById(payload.sub);
+
+		console.log('user found: ', user);
 		// revoke token if user no longer exists
 		if (!user) {
 			return done(null, true);
